@@ -1,0 +1,6 @@
+# ncsist executable will have:
+# label: system_u:object_r:ncsist_exec_t
+# MLS sensitivity: s0
+# MCS categories: <none>
+
+#/usr/sbin/ncsist		--	gen_context(system_u:object_r:ncsist_exec_t,s0)

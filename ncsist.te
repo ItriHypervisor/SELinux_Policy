@@ -1,0 +1,106 @@
+
+policy_module(ncsist,1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+gen_bool(allow_ncsist_create_del,true)
+type ncsist_t;
+#user ncsist_u roles { ncsist_r };
+type ncsist_home_t;
+#domain_type(ncsist_t)
+#domain_entry_file(ncsist_t, ncsist_home_t)
+
+#type ncsist_log_t;
+#logging_log_file(ncsist_log_t)
+
+#type ncsist_tmp_t;
+#files_tmp_file(ncsist_tmp_t)
+
+########################################
+#
+# Myapp local policy
+#
+#
+
+
+gen_require(`
+		type unconfined_t;
+		role unconfined_r;
+		type admin_home_t;
+		type bin_t;
+		type devtty_t;
+		type etc_t;
+		type fs_t;
+		type ld_so_cache_t;
+		type ld_so_t;
+		type lib_t;
+		type locale_t;
+		type null_device_t;
+		type passwd_file_t;
+		type root_t;
+		type security_t;
+		type sysfs_t;
+		type user_devpts_t;
+		type user_home_dir_t;
+		type user_tmp_t;
+		type usr_t;
+		type var_run_t;
+		type var_t;
+')
+
+
+role unconfined_r types ncsist_t;
+
+allow ncsist_t user_devpts_t:chr_file { read write };
+manage_files_pattern(ncsist_t, etc_t, etc_t)
+manage_files_pattern(ncsist_t, lib_t, lib_t)
+manage_lnk_files_pattern(ncsist_t, lib_t, lib_t)
+mmap_exec_files_pattern(ncsist_t, lib_t, lib_t)
+manage_files_pattern(ncsist_t, ld_so_cache_t, ld_so_cache_t)
+manage_files_pattern(ncsist_t, ld_so_t, ld_so_t)
+manage_files_pattern(ncsist_t, sysfs_t, sysfs_t)
+manage_files_pattern(ncsist_t, security_t, security_t)
+manage_files_pattern(ncsist_t, locale_t, locale_t)
+manage_files_pattern(ncsist_t, admin_home_t, admin_home_t)
+manage_files_pattern(ncsist_t, usr_t, usr_t)
+manage_files_pattern(ncsist_t, bin_t, bin_t)
+manage_files_pattern(ncsist_t, passwd_file_t, passwd_file_t)
+manage_files_pattern(ncsist_t, ncsist_home_t, ncsist_home_t)
+manage_files_pattern(ncsist_t, var_t, var_t)
+
+list_dirs_pattern(unconfined_t, ncsist_home_t, ncsist_home_t)
+rw_files_pattern(unconfined_t, ncsist_home_t, ncsist_home_t)
+
+if(allow_ncsist_create_del){
+	manage_files_pattern(unconfined_t, ncsist_home_t, ncsist_home_t)
+	allow ncsist_home_t fs_t:filesystem associate;
+}
+
+type_transition unconfined_t ncsist_home_t:process ncsist_t;
+allow unconfined_t ncsist_home_t:file execute;
+allow ncsist_t ncsist_home_t:file entrypoint;
+allow unconfined_t ncsist_t:process transition;
+
+#work around
+allow ncsist_t devtty_t:chr_file { read write };
+allow ncsist_t ld_so_cache_t:file { map };
+allow ncsist_t lib_t:file { execute map };
+allow ncsist_t locale_t:file { map };
+allow ncsist_t ncsist_t:capability { dac_override };
+allow ncsist_t ncsist_t:unix_stream_socket { create connect };
+allow ncsist_t null_device_t:chr_file { read write open };
+allow ncsist_t root_t:dir { search };
+allow ncsist_t security_t:filesystem { getattr };
+allow ncsist_t unconfined_t:fd { use };
+allow ncsist_t unconfined_t:process { sigchld };
+allow ncsist_t user_devpts_t:chr_file { ioctl getattr read write open };
+allow ncsist_t user_home_dir_t:dir { search };
+allow ncsist_t user_tmp_t:file { read };
+allow ncsist_t usr_t:lnk_file { read };
+allow ncsist_t var_run_t:dir { search };
+allow ncsist_t var_run_t:lnk_file { read };
+allow unconfined_t ncsist_home_t:file { map };
+allow unconfined_t ncsist_t:process { rlimitinh siginh noatsecure };
