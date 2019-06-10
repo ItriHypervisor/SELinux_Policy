@@ -53,59 +53,76 @@ gen_require(`
 		type user_home_t;
 		type selinux_config_t;
 		type tmp_t;
+		type setrans_var_run_t;
+		type sshd_t;
 ')
 
 
 
 
 ### etc_t
-#manage_files_pattern(ncsist_t, etc_t, etc_t)
-read_files_pattern(ncsist_t, etc_t, etc_t)
+#read_files_pattern(ncsist_t, etc_t, etc_t)
+allow ncsist_t etc_t:dir { getattr search };
+allow ncsist_t etc_t:file { getattr open read };
+allow ncsist_t etc_t:file { map };
+
 
 ### lib_t
-#manage_files_pattern(ncsist_t, lib_t, lib_t)
-#read_files_pattern(ncsist_t, lib_t, lib_t)
-#manage_lnk_files_pattern(ncsist_t, lib_t, lib_t)
-#allow ncsist_t lib_t:file { execute map read open getattr };
-read_lnk_files_pattern(ncsist_t, lib_t, lib_t)
-mmap_exec_files_pattern(ncsist_t, lib_t, lib_t)
+#read_lnk_files_pattern(ncsist_t, lib_t, lib_t)
+#mmap_exec_files_pattern(ncsist_t, lib_t, lib_t)
+allow ncsist_t lib_t:dir { getattr search };
+allow ncsist_t lib_t:lnk_file { read };
+allow ncsist_t lib_t:file { getattr open read map execute };
+
 
 ### ld_so_cache_t
-#manage_files_pattern(ncsist_t, ld_so_cache_t, ld_so_cache_t)
-read_files_pattern(ncsist_t, ld_so_cache_t, ld_so_cache_t)
+#read_files_pattern(ncsist_t, ld_so_cache_t, ld_so_cache_t)
+#allow ncsist_t ld_so_cache_t:dir { getattr};
+allow ncsist_t ld_so_cache_t:file { getattr open read };
 allow ncsist_t ld_so_cache_t:file { map };
 
 ### ld_so_t
-#manage_files_pattern(ncsist_t, ld_so_t, ld_so_t)
-read_files_pattern(ncsist_t, ld_so_t, ld_so_t)
+#read_files_pattern(ncsist_t, ld_so_t, ld_so_t)
+#allow ncsist_t ld_so_t:dir {  };
+allow ncsist_t ld_so_t:file { read };
+
 
 ### sysfs_t
-#manage_files_pattern(ncsist_t, sysfs_t, sysfs_t)
-read_files_pattern(ncsist_t, sysfs_t, sysfs_t)
+#read_files_pattern(ncsist_t, sysfs_t, sysfs_t)
+allow ncsist_t sysfs_t:dir { search };
+#allow ncsist_t sysfs_t:file read_file_perms;
+
 
 ### security_t
-#manage_files_pattern(ncsist_t, security_t, security_t)
 allow ncsist_t security_t:filesystem { getattr };
+allow ncsist_t security_t:dir { getattr };
 
 ### locale_t
-#manage_files_pattern(ncsist_t, locale_t, locale_t)
-allow ncsist_t locale_t:file { map };
+allow ncsist_t locale_t:file { getattr open read map };
+allow ncsist_t locale_t:dir { search };
+allow ncsist_t locale_t:lnk_file { read };	#read /etc/localtime
 
 ### admin_home_t
-#manage_files_pattern(ncsist_t, admin_home_t, admin_home_t)
-read_files_pattern(ncsist_t, admin_home_t, admin_home_t)
+#read_files_pattern(ncsist_t, admin_home_t, admin_home_t)
+#allow ncsist_t admin_home_t:dir search_dir_perms;
+#allow ncsist_t admin_home_t:file read_file_perms;
+
 
 ### usr_t
-#manage_files_pattern(ncsist_t, usr_t, usr_t)
-read_files_pattern(ncsist_t, usr_t, usr_t)
-#allow ncsist_t usr_t:lnk_file { read };
+#read_files_pattern(ncsist_t, usr_t, usr_t)
+allow ncsist_t usr_t:dir { getattr search open read };
+allow ncsist_t usr_t:file { getattr open read };
+allow ncsist_t usr_t:lnk_file { read };
 
 ### bin_t
-#manage_files_pattern(ncsist_t, bin_t, bin_t)
-read_files_pattern(ncsist_t, bin_t, bin_t)
+#read_files_pattern(ncsist_t, bin_t, bin_t)
+allow ncsist_t bin_t:dir { search };
+allow ncsist_t bin_t:file { getattr open read };
 
 ### passwd_file_t
-manage_files_pattern(ncsist_t, passwd_file_t, passwd_file_t)
+#manage_files_pattern(ncsist_t, passwd_file_t, passwd_file_t)
+allow ncsist_t passwd_file_t:file { getattr open read };
+#allow ncsist_t passwd_file_t:file { map };
 
 ### ncsist_home_t
 #allow ncsist_t ncsist_home_t:dir { create }; for scenario like vim ./test/test
@@ -113,30 +130,38 @@ manage_files_pattern(ncsist_t, ncsist_home_t, ncsist_home_t)
 
 ### var_t
 #manage_files_pattern(ncsist_t, var_t, var_t)
-read_files_pattern(ncsist_t, var_t, var_t)
+#read_files_pattern(ncsist_t, var_t, var_t)
+allow ncsist_t var_t:dir { search };
+#allow ncsist_t var_t:file read_file_perms;
+
 
 ### user_devpts_t
-allow ncsist_t user_devpts_t:chr_file { ioctl getattr read write open };
+#allow ncsist_t user_devpts_t:chr_file { ioctl getattr read write open };
+allow ncsist_t user_devpts_t:chr_file { ioctl read write open };
+
+### sshd_t for user logining through ssh
+allow ncsist_t sshd_t:fd { use };
 
 ### fs_t
 allow ncsist_home_t fs_t:filesystem associate;
 
 ### var_run_t
-#allow ncsist_t var_run_t:dir { search };
-#allow ncsist_t var_run_t:lnk_file { read };
-read_lnk_files_pattern(ncsist_t, var_run_t, var_run_t)
+#read_lnk_files_pattern(ncsist_t, var_run_t, var_run_t)
+allow ncsist_t var_run_t:dir { search };
+allow ncsist_t var_run_t:lnk_file { read };
+
 
 ### user_home_dir_t
+#manage_dirs_pattern(ncsist_t, user_home_dir_t, user_home_dir_t)
+#manage_files_pattern(ncsist_t, user_home_dir_t, user_home_dir_t)
 #allow ncsist_t user_home_dir_t:dir { create search getattr open read write add_name remove_name };
 #allow ncsist_t user_home_dir_t:file { create open read write };
-manage_dirs_pattern(ncsist_t, user_home_dir_t, user_home_dir_t)
-manage_files_pattern(ncsist_t, user_home_dir_t, user_home_dir_t)
 
-### unconfined_t can just rw file if boolean is false
+
+### unconfined_t can only list & rw file if boolean is false
 list_dirs_pattern(unconfined_t, ncsist_home_t, ncsist_home_t)
 rw_files_pattern(unconfined_t, ncsist_home_t, ncsist_home_t)
 rw_lnk_files_pattern(unconfined_t, ncsist_home_t, ncsist_home_t)
-#allow unconfined_t ncsist_home_t:dir { rmdir };
 allow unconfined_t ncsist_home_t:file { map };
 
 if(allow_ncsist_create_del){
@@ -152,16 +177,18 @@ allow ncsist_t ncsist_home_t:file entrypoint;
 allow unconfined_t ncsist_t:process transition;
 
 #work around
-allow ncsist_t devtty_t:chr_file { read write };
+#allow ncsist_t devtty_t:chr_file { read write };
+#allow ncsist_t ncsist_t:capability { dac_override };
+#allow ncsist_t null_device_t:chr_file { read write open };
+#allow ncsist_t tmp_t:dir { getattr search };
+#allow ncsist_t user_home_t:dir { search };
+#allow ncsist_t user_tmp_t:file { read };
 allow ncsist_t home_root_t:dir { search };
-allow ncsist_t ncsist_t:capability { dac_override };
 allow ncsist_t ncsist_t:unix_stream_socket { create connect };
-allow ncsist_t null_device_t:chr_file { read write open };
 allow ncsist_t root_t:dir { search };
 allow ncsist_t selinux_config_t:dir { search };
-allow ncsist_t tmp_t:dir { getattr };
 allow ncsist_t unconfined_t:fd { use };
 allow ncsist_t unconfined_t:process { sigchld };
-allow ncsist_t user_home_t:file { open read write getattr };
-allow ncsist_t user_tmp_t:file { read };
-#allow unconfined_t ncsist_t:process { rlimitinh siginh noatsecure };
+allow ncsist_t user_home_t:file { getattr };
+allow unconfined_t ncsist_t:process { rlimitinh siginh noatsecure };
+allow ncsist_t setrans_var_run_t:dir { search };
