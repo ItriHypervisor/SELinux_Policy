@@ -6,7 +6,13 @@ policy_module(ncsist,1.0.0)
 # Declarations
 #
 
+## <desc>
+## <p>
+## Allow ncsist domain to create and delete files
+## </p>
+## </desc>
 gen_bool(allow_ncsist_create_del,true)
+
 type ncsist_t;
 type ncsist_home_t;
 
@@ -81,8 +87,9 @@ miscfiles_read_localization(ncsist_t)
 ### bin_t
 corecmd_read_bin_files(ncsist_t)
 
+# Uncomment if running on CentOS.
 ### passwd_file_t
-read_files_pattern(ncsist_t, passwd_file_t, passwd_file_t)
+#read_files_pattern(ncsist_t, passwd_file_t, passwd_file_t)
 
 ### user_devpts_t
 userdom_use_user_ptys(ncsist_t)

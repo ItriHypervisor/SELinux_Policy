@@ -1,0 +1,24 @@
+policy_module(busybox, 0.0.1)
+
+########################################
+#
+# Declarations
+#
+
+#
+# No new type for busybox.
+#
+
+#
+# Allow execmem on limited domains due to the structure of
+# the busybox.
+#
+allow init_t self:process execmem;
+allow initrc_t self:process execmem;
+allow getty_t self:process execmem;
+allow local_login_t self:process execmem;
+allow mount_t self:process execmem;
+
+# dangerous!
+allow user_t self:process execmem;
+allow sysadm_t self:process execmem;
