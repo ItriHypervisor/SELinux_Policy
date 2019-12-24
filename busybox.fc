@@ -1,1 +1,11 @@
-# This module currently does not have any file contexts.
+#
+# /etc
+#
+/etc/udhcpc-script	-- gen_context(system_u:object_r:dhcp_etc_t,s0)
+
+#
+# /usr
+#
+/usr/bin/udhcpc		-- gen_context(system_u:object_r:dhcpc_exec_t,s0)
+
+/usr/sbin/udhcpc	-- gen_context(system_u:object_r:dhcpc_exec_t,s0)
