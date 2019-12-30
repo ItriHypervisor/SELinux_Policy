@@ -1,0 +1,8 @@
+## <summary>
+##	Policy for ubuntu desktop to boot and login as unconfined_t
+## </summary>
+## <required val="true">
+##	This module is required
+## </required>
+
+
