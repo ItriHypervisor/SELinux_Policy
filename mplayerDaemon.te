@@ -1,0 +1,117 @@
+
+policy_module(rasp, 1.0.0)
+
+type raspd_t;
+
+
+
+gen_require(`
+            
+        role system_r;
+        type mplayer_exec_t;
+        type home_root_t;
+        type etc_t;
+        type lib_t;
+        type var_run_t;
+        type locale_t;
+        type raspd_t;
+        type ld_so_t;
+        type security_t;
+        type selinux_config_t;
+        type user_devpts_t;
+        type root_t;
+        type initrc_t;
+        type ld_so_cache_t;
+        type proc_t;
+        type usr_t;
+        type var_t;
+        type sysfs_t;
+        type mplayer_etc_t;
+
+')
+
+
+
+spec_domtrans_pattern(initrc_t, mplayer_exec_t, raspd_t)
+domain_entry_file(raspd_t, mplayer_exec_t)
+type_transition initrc_t mplayer_exec_t:process raspd_t;
+role system_r types raspd_t;
+
+#============= raspd_t ==============
+#application_domain(raspd_t, mplayer_exec_t)                                          
+#domain_auto_transition_pattern(initrc_t, mplayer_exec_t, raspd_t)     
+#role system_r types raspd_t;
+allow raspd_t httpd_sys_content_t:dir search;
+allow raspd_t init_t:fd use;
+allow raspd_t initrc_t:fd use;
+allow raspd_t zero_device_t:chr_file map;
+allow raspd_t default_t:dir { search write add_name};
+allow raspd_t default_t:file { create getattr open read };
+allow raspd_t framebuf_device_t:chr_file { ioctl open read write map };
+allow raspd_t httpd_sys_script_exec_t:dir { getattr search open read };
+allow raspd_t httpd_sys_script_exec_t:file { getattr open read };
+allow raspd_t mplayer_etc_t:dir search;
+allow raspd_t mplayer_etc_t:file { getattr open read };
+allow raspd_t sysctl_t:dir search;
+allow raspd_t sysctl_vm_overcommit_t:file { open read };
+allow raspd_t sysctl_vm_t:dir search;
+allow raspd_t httpd_sys_rw_content_t:fifo_file { getattr open read write };
+
+allow raspd_t etc_t:dir { getattr search };
+
+allow raspd_t home_root_t:dir search;
+
+allow raspd_t ld_so_cache_t:file { getattr map open read };
+allow raspd_t ld_so_t:file { execute map read };
+allow raspd_t lib_t:dir { getattr search };
+allow raspd_t lib_t:file { execute getattr map open read };
+allow raspd_t lib_t:lnk_file read;
+
+allow raspd_t locale_t:dir search;
+allow raspd_t locale_t:file { getattr map open read };
+
+
+allow raspd_t proc_t:dir search;
+allow raspd_t proc_t:lnk_file read;
+
+allow raspd_t root_t:dir search;
+
+allow raspd_t security_t:filesystem getattr;
+
+allow raspd_t self:dir search;
+allow raspd_t self:file { getattr open read };
+allow raspd_t self:unix_stream_socket { connect create };
+allow raspd_t self:process { execmem signal sigkill getsched fork };
+
+allow raspd_t selinux_config_t:dir search;
+
+allow raspd_t sysfs_t:dir { getattr open read search };
+allow raspd_t sysfs_t:file { getattr open read };
+
+allow raspd_t user_devpts_t:chr_file { getattr ioctl read write };
+
+allow raspd_t usr_t:dir { getattr search };
+
+allow raspd_t var_run_t:dir search;
+allow raspd_t var_run_t:lnk_file read;
+allow raspd_t var_t:dir search;
+
+allow raspd_t null_device_t:chr_file { getattr open read write ioctl };
+
+
+allow raspd_t device_t:dir search;
+
+allow raspd_t cpu_online_t:file { open read };
+allow raspd_t zero_device_t:chr_file { map open read write };
+
+#============= initrc_t ==============
+allow initrc_t raspd_t:dir { getattr search };
+allow initrc_t raspd_t:file { open read };
+allow initrc_t raspd_t:process getattr;
+allow initrc_t raspd_t:dir { open read };
+allow initrc_t raspd_t:file getattr;
+allow initrc_t raspd_t:lnk_file read;
+allow initrc_t raspd_t:unix_stream_socket getattr;
+
+ps_process_pattern(sysadm_t, raspd_t)
+ps_process_pattern(user_t, raspd_t)
