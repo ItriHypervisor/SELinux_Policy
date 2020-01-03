@@ -6,7 +6,6 @@ type mplayerd_t;
 
 
 gen_require(`
-            
         role system_r;
         type mplayer_exec_t;
         type home_root_t;
@@ -32,88 +31,128 @@ gen_require(`
 
 
 
-spec_domtrans_pattern(initrc_t, mplayer_exec_t, mplayerd_t)
-domain_entry_file(mplayerd_t, mplayer_exec_t)
-type_transition initrc_t mplayer_exec_t:process mplayerd_t;
 role system_r types mplayerd_t;
-
-#============= mplayerd_t ==============
-#application_domain(mplayerd_t, mplayer_exec_t)                                          
-#domain_auto_transition_pattern(initrc_t, mplayer_exec_t, mplayerd_t)     
-#role system_r types mplayerd_t;
-allow mplayerd_t httpd_sys_content_t:dir search;
+domain_auto_transition_pattern(initrc_t, mplayer_exec_t, mplayerd_t)
+domain_entry_file(mplayerd_t, mplayer_exec_t)
 allow mplayerd_t init_t:fd use;
 allow mplayerd_t initrc_t:fd use;
-allow mplayerd_t zero_device_t:chr_file map;
-allow mplayerd_t default_t:dir { search write add_name};
-allow mplayerd_t default_t:file { create getattr open read };
-allow mplayerd_t framebuf_device_t:chr_file { ioctl open read write map };
-allow mplayerd_t httpd_sys_script_exec_t:dir { getattr search open read };
-allow mplayerd_t httpd_sys_script_exec_t:file { getattr open read };
-allow mplayerd_t mplayer_etc_t:dir search;
-allow mplayerd_t mplayer_etc_t:file { getattr open read };
-allow mplayerd_t sysctl_t:dir search;
-allow mplayerd_t sysctl_vm_overcommit_t:file { open read };
-allow mplayerd_t sysctl_vm_t:dir search;
-allow mplayerd_t httpd_sys_rw_content_t:fifo_file { getattr open read write };
 
-allow mplayerd_t etc_t:dir { getattr search };
+#============= mplayerd_t ==============
+#allow mplayerd_t httpd_sys_script_exec_t:dir { getattr search open read };
+#allow mplayerd_t httpd_sys_script_exec_t:file { getattr open read };
+list_dirs_pattern(mplayerd_t, httpd_sys_script_exec_t, httpd_sys_script_exec_t)
+read_files_pattern(mplayerd_t, httpd_sys_script_exec_t, httpd_sys_script_exec_t)
 
-allow mplayerd_t home_root_t:dir search;
+#copy from mplayer.te
+#allow mplayerd_t mplayer_etc_t:dir search;
+#allow mplayerd_t mplayer_etc_t:file { getattr open read };
+allow mplayerd_t mplayer_etc_t:dir list_dir_perms;
+allow mplayerd_t mplayer_etc_t:file read_file_perms;
+allow mplayerd_t mplayer_etc_t:lnk_file read_lnk_file_perms;
 
-allow mplayerd_t ld_so_cache_t:file { getattr map open read };
-allow mplayerd_t ld_so_t:file { execute map read };
-allow mplayerd_t lib_t:dir { getattr search };
-allow mplayerd_t lib_t:file { execute getattr map open read };
-allow mplayerd_t lib_t:lnk_file read;
+#allow mplayerd_t httpd_sys_rw_content_t:fifo_file { getattr open read write };
+rw_fifo_files_pattern(mplayerd_t, httpd_sys_rw_content_t, httpd_sys_rw_content_t)
 
-allow mplayerd_t locale_t:dir search;
-allow mplayerd_t locale_t:file { getattr map open read };
+#copy from kernel.if
+#allow mplayerd_t sysctl_t:dir search;
+#allow mplayerd_t sysctl_vm_overcommit_t:file { open read };
+#allow mplayerd_t sysctl_vm_t:dir search;
+kernel_read_vm_overcommit_sysctl(mplayerd_t)
 
+#copy from files.if : library does and miscfiles does, ...
+#allow mplayerd_t etc_t:dir { getattr search };
+#files_search_etc(mplayerd_t)
 
-allow mplayerd_t proc_t:dir search;
-allow mplayerd_t proc_t:lnk_file read;
+#copy from libraries.if
+#allow mplayerd_t ld_so_cache_t:file { getattr map open read };
+#allow mplayerd_t ld_so_t:file { execute map read };
+#allow mplayerd_t lib_t:dir { getattr search };
+#allow mplayerd_t lib_t:lnk_file read;
+#allow mplayerd_t lib_t:file { execute getattr map open read };
+#allow mplayerd_t usr_t:dir { getattr search };
+libs_exec_lib_files(mplayerd_t)
+libs_use_ld_so(mplayerd_t)
 
-allow mplayerd_t root_t:dir search;
+#copy from selinux.if : Get the mountpoint of the selinuxfs filesystem.
+#allow mplayerd_t security_t:filesystem getattr;
+#allow mplayerd_t sysfs_t:dir { getattr open read search };
+#allow mplayerd_t sysfs_t:file { getattr open read };
+#copy from kernel.if : Read generic symbolic links in /proc, e.g. /proc/self
+#allow mplayerd_t proc_t:dir search;
+#allow mplayerd_t proc_t:lnk_file read;
+#kernel_read_proc_symlinks(mplayerd_t)
+selinux_get_fs_mount(mplayerd_t)
 
-allow mplayerd_t security_t:filesystem getattr;
+#copy from miscfiles.if
+#allow mplayerd_t locale_t:dir search;
+#allow mplayerd_t locale_t:file { getattr map open read };
+miscfiles_read_localization(mplayerd_t)
 
-allow mplayerd_t self:dir search;
-allow mplayerd_t self:file { getattr open read };
-allow mplayerd_t self:unix_stream_socket { connect create };
+#copy from userdomain.if : Read and write a user domain pty.
+#allow mplayerd_t device_t:dir search;
+#allow mplayerd_t user_devpts_t:chr_file { getattr ioctl read write };
+userdom_use_user_ptys(mplayerd_t)
+
+#copy from devices.if
+#allow mplayerd_t framebuf_device_t:chr_file { ioctl open read write map };
+allow mplayerd_t framebuf_device_t:chr_file { map };
+dev_rw_framebuffer(mplayerd_t)
+
+#copy from devices.if
+#allow mplayerd_t zero_device_t:chr_file { map open read write };
+dev_rwx_zero(mplayerd_t)
+
+#copy from devices.if
+#allow mplayerd_t null_device_t:chr_file { getattr open read write ioctl };
+dev_rw_null(mplayerd_t)
+
+#copy from devices.if
+#allow mplayerd_t cpu_online_t:file { open read };
+dev_read_cpu_online(mplayerd_t)
+
+#copy from files.if : Search the contents of runtime process ID directories (/var/run).
+#allow mplayerd_t var_run_t:dir search;
+#allow mplayerd_t var_run_t:lnk_file read;
+#allow mplayerd_t var_t:dir search;
+files_search_pids(mplayerd_t)
+
+#I think that is minimum set for this rule, and search for default_context_t is OK, maybe.
+#allow mplayerd_t selinux_config_t:dir search;
+seutil_search_default_contexts(mplayerd_t)
+
+#search dir for /home and /root
+#allow mplayerd_t home_root_t:dir search;
+#allow mplayerd_t root_t:dir search;
+search_dirs_pattern(mplayerd_t, home_root_t, home_root_t)
+search_dirs_pattern(mplayerd_t, root_t, root_t)
+
+#copy from files.if. I make it can delete file. Be careful!.
+#allow mplayerd_t default_t:dir { search write add_name};
+#allow mplayerd_t default_t:file { create getattr open read };
+files_manage_default_files(mplayerd_t)
+
+#Read self proc data
+#allow mplayerd_t self:dir search;
+#allow mplayerd_t self:file { getattr open read };
+ps_process_pattern(mplayerd_t, mplayerd_t)
+
 allow mplayerd_t self:process { execmem signal sigkill getsched fork };
+allow mplayerd_t self:unix_stream_socket { connect create };
 
-allow mplayerd_t selinux_config_t:dir search;
-
-allow mplayerd_t sysfs_t:dir { getattr open read search };
-allow mplayerd_t sysfs_t:file { getattr open read };
-
-allow mplayerd_t user_devpts_t:chr_file { getattr ioctl read write };
-
-allow mplayerd_t usr_t:dir { getattr search };
-
-allow mplayerd_t var_run_t:dir search;
-allow mplayerd_t var_run_t:lnk_file read;
-allow mplayerd_t var_t:dir search;
-
-allow mplayerd_t null_device_t:chr_file { getattr open read write ioctl };
-
-
-allow mplayerd_t device_t:dir search;
-
-allow mplayerd_t cpu_online_t:file { open read };
-allow mplayerd_t zero_device_t:chr_file { map open read write };
-
-#============= initrc_t ==============
-allow initrc_t mplayerd_t:dir { getattr search };
-allow initrc_t mplayerd_t:file { open read };
-allow initrc_t mplayerd_t:process getattr;
-allow initrc_t mplayerd_t:dir { open read };
-allow initrc_t mplayerd_t:file getattr;
-allow initrc_t mplayerd_t:lnk_file read;
-allow initrc_t mplayerd_t:unix_stream_socket getattr;
-
-apache_read_sys_content(mplayerd_t)
-
+#Read foreign domain proc data
 ps_process_pattern(sysadm_t, mplayerd_t)
 ps_process_pattern(user_t, mplayerd_t)
+
+#============= initrc_t ==============
+#allow initrc_t mplayerd_t:dir { getattr search open read };
+#allow initrc_t mplayerd_t:file { getattr open read };
+#allow initrc_t mplayerd_t:lnk_file read;
+#allow initrc_t mplayerd_t:process getattr;
+ps_process_pattern(initrc_t, mplayerd_t)
+
+allow initrc_t mplayerd_t:unix_stream_socket getattr;
+
+#copy from apache.if
+apache_read_sys_content(mplayerd_t)
+
+
