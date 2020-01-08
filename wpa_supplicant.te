@@ -23,6 +23,17 @@ allow NetworkManager_t wpa_cli_var_run_t:sock_file write;
 # execute the ifplugd script
 corecmd_exec_bin(wpa_cli_t)
 corecmd_exec_shell(wpa_cli_t)
+ifplugd_read_config(wpa_cli_t)
 domain_entry_file(ifplugd_t, ifplugd_etc_t)
 domtrans_pattern(wpa_cli_t, ifplugd_etc_t, ifplugd_t)
 allow ifplugd_t wpa_cli_t:unix_dgram_socket { read write };
+
+########################################
+#
+# additional udhcpc local policy
+#
+
+# show interface message using http CGI script
+apache_search_sys_scripts(dhcpc_t)
+domtrans_pattern(dhcpc_t, httpd_sys_script_exec_t, httpd_sys_script_t)
+init_dontaudit_use_fds(httpd_sys_script_t)

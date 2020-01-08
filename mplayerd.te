@@ -77,6 +77,12 @@ dev_rw_null(mplayerd_t)
 #copy from devices.if
 dev_read_cpu_online(mplayerd_t)
 
+# use /dev/tty
+term_use_controlling_term(mplayerd_t)
+
+# font for OSD
+miscfiles_read_fonts(mplayerd_t)
+
 #copy from files.if : Search the contents of runtime process ID directories (/var/run).
 files_search_pids(mplayerd_t)
 

@@ -1,0 +1,1 @@
+/usr/share/mplayer(/.*)?	gen_context(system_u:object_r:mplayer_etc_t,s0)
