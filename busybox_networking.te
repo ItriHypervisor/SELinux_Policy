@@ -1,4 +1,4 @@
-policy_module(wpa_supplicant, 0.0.1)
+policy_module(busybox_networking, 0.0.1)
 
 ########################################
 #
