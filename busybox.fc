@@ -1,10 +1,4 @@
 #
-# /etc
-#
-/etc/udhcpc-script	-- gen_context(system_u:object_r:dhcp_etc_t,s0)
-/etc/ifplugd-script	-- gen_context(system_u:object_r:ifplugd_etc_t,s0)
-
-#
 # /usr
 #
 /usr/bin/udhcpc		-- gen_context(system_u:object_r:dhcpc_exec_t,s0)
