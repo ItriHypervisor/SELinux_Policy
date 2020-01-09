@@ -1,9 +1,15 @@
 policy_module(busybox_networking, 0.0.1)
 
-########################################
-#
-# Declarations
-#
+gen_require(`
+	type NetworkManager_t;
+	type dhcpc_t;
+	type httpd_sys_script_exec_t;
+	type httpd_sys_script_t;
+	type ifplugd_etc_t;
+	type ifplugd_t;
+	type var_run_t;
+	type wpa_cli_t;
+')
 
 type wpa_cli_var_run_t;
 files_pid_file(wpa_cli_var_run_t)
@@ -33,7 +39,7 @@ allow ifplugd_t wpa_cli_t:unix_dgram_socket { read write };
 # additional udhcpc local policy
 #
 
-# show interface message using http CGI script
+# show interface message using CGI script
 apache_search_sys_scripts(dhcpc_t)
 domtrans_pattern(dhcpc_t, httpd_sys_script_exec_t, httpd_sys_script_t)
 init_dontaudit_use_fds(httpd_sys_script_t)

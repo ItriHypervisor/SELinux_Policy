@@ -1,10 +1,6 @@
 
 policy_module(mplayerd, 1.0.0)
 
-type mplayerd_t;
-
-
-
 gen_require(`
         role system_r;
         type mplayer_exec_t;
@@ -29,87 +25,71 @@ gen_require(`
 
 ')
 
+type mplayerd_t;
 
+########################################
+#
+# local policy for mplayer backend running in slave mode brought up by init.
+# based off original mplayer policy.
+#
 
+# XXX: for demo purpose, we don't want the backend to be killed by anyone,
+# even root, so mplayerd_t is not a domain. Yet this will annoy some nerverallow
+# rules. See if we can do this without commenting out those nerverallow.
 role system_r types mplayerd_t;
 domain_auto_transition_pattern(initrc_t, mplayer_exec_t, mplayerd_t)
 domain_entry_file(mplayerd_t, mplayer_exec_t)
 allow mplayerd_t init_t:fd use;
 allow mplayerd_t initrc_t:fd use;
+allow initrc_t mplayerd_t:unix_stream_socket getattr;
+ps_process_pattern(initrc_t, mplayerd_t)
 
-#============= mplayerd_t ==============
-list_dirs_pattern(mplayerd_t, httpd_sys_script_exec_t, httpd_sys_script_exec_t)
-read_files_pattern(mplayerd_t, httpd_sys_script_exec_t, httpd_sys_script_exec_t)
-
-#copy from mplayer.te
-allow mplayerd_t mplayer_etc_t:dir list_dir_perms;
-allow mplayerd_t mplayer_etc_t:file read_file_perms;
-allow mplayerd_t mplayer_etc_t:lnk_file read_lnk_file_perms;
-
-rw_fifo_files_pattern(mplayerd_t, httpd_sys_rw_content_t, httpd_sys_rw_content_t)
-
-#copy from kernel.if
-kernel_read_vm_overcommit_sysctl(mplayerd_t)
-
-#copy from libraries.if
 libs_exec_lib_files(mplayerd_t)
 libs_use_ld_so(mplayerd_t)
 
-#copy from selinux.if : Get the mountpoint of the selinuxfs filesystem.
-selinux_get_fs_mount(mplayerd_t)
+dev_rwx_zero(mplayerd_t)
+dev_rw_null(mplayerd_t)
+dev_read_cpu_online(mplayerd_t)
 
-#copy from miscfiles.if
-miscfiles_read_localization(mplayerd_t)
-
-#copy from userdomain.if : Read and write a user domain pty.
-userdom_use_user_ptys(mplayerd_t)
-
-#copy from devices.if
+# video output to the framebuffer
 allow mplayerd_t framebuf_device_t:chr_file { map };
 dev_rw_framebuffer(mplayerd_t)
-
-#copy from devices.if
-dev_rwx_zero(mplayerd_t)
-
-#copy from devices.if
-dev_rw_null(mplayerd_t)
-
-#copy from devices.if
-dev_read_cpu_online(mplayerd_t)
 
 # use /dev/tty
 term_use_controlling_term(mplayerd_t)
 
+kernel_read_vm_overcommit_sysctl(mplayerd_t)
+selinux_get_fs_mount(mplayerd_t)
+
+allow mplayerd_t mplayer_etc_t:dir list_dir_perms;
+allow mplayerd_t mplayer_etc_t:file read_file_perms;
+allow mplayerd_t mplayer_etc_t:lnk_file read_lnk_file_perms;
+
 # font for OSD
+miscfiles_read_localization(mplayerd_t)
 miscfiles_read_fonts(mplayerd_t)
 
-#copy from files.if : Search the contents of runtime process ID directories (/var/run).
-files_search_pids(mplayerd_t)
-
-#I think that is minimum set for this rule, and search for default_context_t is OK, maybe.
-seutil_search_default_contexts(mplayerd_t)
-
-#search dir for /home and /root
+userdom_use_user_ptys(mplayerd_t)
 search_dirs_pattern(mplayerd_t, home_root_t, home_root_t)
 search_dirs_pattern(mplayerd_t, root_t, root_t)
 
-#copy from files.if. I make it can delete file. Be careful!.
-files_manage_default_files(mplayerd_t)
-
-allow mplayerd_t self:process { execmem signal sigkill getsched fork };
-allow mplayerd_t self:unix_stream_socket { connect create };
-
-#Read self proc data
+files_search_pids(mplayerd_t)
 ps_process_pattern(mplayerd_t, mplayerd_t)
-
-#Read foreign domain proc data
 ps_process_pattern(sysadm_t, mplayerd_t)
 ps_process_pattern(user_t, mplayerd_t)
 
-#============= initrc_t ==============
-ps_process_pattern(initrc_t, mplayerd_t)
+# I think that is minimum set for this rule, and search for default_context_t is OK, maybe.
+seutil_search_default_contexts(mplayerd_t)
 
-allow initrc_t mplayerd_t:unix_stream_socket getattr;
+# Be careful, it can delete file now.
+files_manage_default_files(mplayerd_t)
 
-#copy from apache.if
+# XXX, see if execmem is strictly needed
+allow mplayerd_t self:process { execmem signal sigkill getsched fork };
+allow mplayerd_t self:unix_stream_socket { connect create };
+
+# The front-end CGI script will send mplayer commands over the fifo.
 apache_read_sys_content(mplayerd_t)
+list_dirs_pattern(mplayerd_t, httpd_sys_script_exec_t, httpd_sys_script_exec_t)
+read_files_pattern(mplayerd_t, httpd_sys_script_exec_t, httpd_sys_script_exec_t)
+rw_fifo_files_pattern(mplayerd_t, httpd_sys_rw_content_t, httpd_sys_rw_content_t)
