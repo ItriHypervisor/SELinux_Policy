@@ -51,3 +51,16 @@ init_dontaudit_use_fds(httpd_sys_script_t)
 # additional httpd local policy
 #
 auth_use_pam(httpd_t)
+
+# for RBAC CGI script
+dev_rw_null(httpd_user_script_t)
+mplayer_role(system_r,httpd_user_script_t)
+init_dontaudit_use_fds(httpd_user_script_t)
+
+# video output to the framebuffer
+allow mplayer_t framebuf_device_t:chr_file { map };
+dev_rw_framebuffer(mplayer_t)
+
+# XXX, see if execmem is strictly needed
+allow mplayer_t self:process { execmem signal sigkill getsched fork };
+allow mplayer_t self:unix_stream_socket { connect create };
