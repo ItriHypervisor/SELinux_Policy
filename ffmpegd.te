@@ -1,0 +1,75 @@
+
+policy_module(ffmpegd, 1.0.0)
+
+gen_require(`
+        role system_r;
+        type httpd_user_script_t;
+        type init_t;
+        type device_t;
+        type v4l_device_t;
+	type framebuf_device_t;
+')
+
+type ffmpegd_t;
+type ffmpegd_exec_t;
+
+########################################
+#
+# local policy for ffmpeg camera streaming daemon
+
+# XXX: for demo purpose, we don't want the backend to be killed by anyone,
+# even root, so ffmpegd_t is not a domain. Yet this will annoy some nerverallow
+# rules. See if we can do this without commenting out those nerverallow.
+role system_r types ffmpegd_t;
+domain_auto_transition_pattern(httpd_user_script_t, ffmpegd_exec_t, ffmpegd_t)
+domain_entry_file(ffmpegd_t, ffmpegd_exec_t)
+allow ffmpegd_t init_t:fd use;
+allow ffmpegd_t httpd_t:fd use;
+allow ffmpegd_t httpd_user_script_t:fd use;
+ps_process_pattern(httpd_user_script_t, ffmpegd_t)
+
+libs_exec_lib_files(ffmpegd_t)
+libs_use_ld_so(ffmpegd_t)
+
+files_list_root(ffmpegd_t)
+dev_rw_null(ffmpegd_t)
+dev_read_cpu_online(ffmpegd_t)
+
+# video input from the camera capture
+allow ffmpegd_t v4l_device_t:chr_file { map };
+rw_chr_files_pattern(ffmpegd_t, device_t, v4l_device_t)
+
+# video output to the framebuffer
+allow ffmpegd_t framebuf_device_t:chr_file { map };
+dev_rw_framebuffer(ffmpegd_t)
+
+# video output to network
+allow ffmpegd_t self:udp_socket { create setopt bind listen getattr write };
+allow ffmpegd_t self:tcp_socket { create setopt bind listen accept write };
+
+sysnet_dns_name_resolve(ffmpegd_t)
+corenet_all_recvfrom_unlabeled(ffmpegd_t)
+corenet_all_recvfrom_netlabel(ffmpegd_t)
+corenet_tcp_sendrecv_generic_if(ffmpegd_t)
+corenet_udp_sendrecv_generic_if(ffmpegd_t)
+corenet_raw_sendrecv_generic_if(ffmpegd_t)
+corenet_tcp_sendrecv_generic_node(ffmpegd_t)
+corenet_udp_sendrecv_generic_node(ffmpegd_t)
+corenet_raw_sendrecv_generic_node(ffmpegd_t)
+corenet_tcp_sendrecv_all_ports(ffmpegd_t)
+corenet_udp_sendrecv_all_ports(ffmpegd_t)
+corenet_tcp_bind_generic_node(ffmpegd_t)
+corenet_udp_bind_generic_node(ffmpegd_t)
+
+corenet_sendrecv_all_client_packets(ffmpegd_t)
+corenet_tcp_connect_all_ports(ffmpegd_t)
+corenet_udp_bind_all_unreserved_ports(ffmpegd_t)
+corenet_tcp_bind_all_unreserved_ports(ffmpegd_t)
+
+files_search_pids(ffmpegd_t)
+kernel_read_proc_symlinks(ffmpegd_t)
+ps_process_pattern(ffmpegd_t, ffmpegd_t)
+
+## XXX, see if execmem is strictly needed
+allow ffmpegd_t self:process { execmem fork };
+allow httpd_user_script_t ffmpegd_t:process { signal sigkill };
